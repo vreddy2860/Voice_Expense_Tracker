@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { FaMicrophone, FaStop, FaPlay } from 'react-icons/fa';
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
 const VoiceRecorder = ({ onExpenseAdded }) => {
   const [isRecording, setIsRecording] = useState(false);
@@ -102,7 +102,11 @@ const VoiceRecorder = ({ onExpenseAdded }) => {
           }
           
         } catch (err) {
-          setError('Failed to transcribe audio. Please try again.');
+          if (err.response && err.response.status === 503) {
+            setError('Google Speech API not configured. Voice recording works, but speech transcription requires Google Cloud setup. Check GOOGLE_CLOUD_SETUP.md for instructions.');
+          } else {
+            setError('Failed to transcribe audio. Please try again.');
+          }
           console.error('Transcription error:', err);
         } finally {
           setIsProcessing(false);

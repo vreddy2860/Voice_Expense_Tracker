@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaDollarSign, FaChartPie, FaCalendarWeek, FaTrendingUp } from 'react-icons/fa';
+import { FaDollarSign, FaChartPie, FaCalendarWeek, FaChartLine } from 'react-icons/fa';
 
 const StatsDashboard = ({ stats }) => {
   const formatCurrency = (amount) => {
@@ -62,13 +62,13 @@ const StatsDashboard = ({ stats }) => {
             {formatCurrency(stats.recent_total)}
           </div>
           <div className="stat-label">
-            <FaTrendingUp style={{ marginRight: '8px' }} />
+            <FaChartLine style={{ marginRight: '8px' }} />
             Weekly Total
           </div>
         </div>
       </div>
 
-      {stats.by_category && stats.by_category.length > 0 && (
+      {stats.by_category && Array.isArray(stats.by_category) && stats.by_category.length > 0 && (
         <div style={{ marginTop: '32px' }}>
           <h3 style={{ 
             marginBottom: '20px', 
@@ -85,7 +85,7 @@ const StatsDashboard = ({ stats }) => {
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
             gap: '16px' 
           }}>
-            {stats.by_category.map((item, index) => (
+            {stats.by_category && stats.by_category.map((item, index) => (
               <div 
                 key={item.category}
                 style={{ 

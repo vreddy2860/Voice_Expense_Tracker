@@ -33,8 +33,8 @@ class SpeechService:
             Transcribed text or empty string if failed
         """
         if not self.client:
-            logger.error("Google Speech API client not initialized")
-            return ""
+            logger.warning("Google Speech API client not initialized - using fallback")
+            return self._fallback_transcription()
         
         try:
             # Configure recognition settings
@@ -64,11 +64,16 @@ class SpeechService:
                 return transcribed_text.strip()
             else:
                 logger.warning("No transcription results returned")
-                return ""
+                return self._fallback_transcription()
                 
         except Exception as e:
             logger.error(f"Transcription failed: {e}")
-            return ""
+            return self._fallback_transcription()
+    
+    def _fallback_transcription(self) -> str:
+        """Fallback transcription when Google Speech API is not available"""
+        logger.info("Using fallback transcription - Google Speech API not configured")
+        return "Voice recording detected. Please set up Google Cloud credentials for speech transcription."
     
     def transcribe_base64_audio(self, base64_audio: str, sample_rate: int = 44100) -> str:
         """

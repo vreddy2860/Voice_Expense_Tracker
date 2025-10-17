@@ -231,13 +231,18 @@ def transcribe_audio():
         if not audio_data:
             return jsonify({'error': 'Audio data is required'}), 400
         
-        if not speech_service.is_available():
-            return jsonify({'error': 'Speech service not available'}), 503
-        
         transcribed_text = speech_service.transcribe_base64_audio(audio_data)
         
         if not transcribed_text:
             return jsonify({'error': 'Failed to transcribe audio'}), 400
+        
+        # Check if it's a fallback message
+        if "Please set up Google Cloud credentials" in transcribed_text:
+            return jsonify({
+                'error': 'Google Speech API not configured. Please set up Google Cloud credentials.',
+                'fallback': True,
+                'message': 'Voice recording works, but speech transcription requires Google Cloud setup.'
+            }), 503
         
         # Extract amount and description from transcribed text
         amount = extract_amount_from_text(transcribed_text)

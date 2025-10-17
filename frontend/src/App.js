@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import VoiceRecorder from './components/VoiceRecorder';
+import BrowserSpeechRecorder from './components/BrowserSpeechRecorder';
+import ManualExpenseForm from './components/ManualExpenseForm';
 import ExpenseList from './components/ExpenseList';
 import StatsDashboard from './components/StatsDashboard';
 import './index.css';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
 function App() {
   const [expenses, setExpenses] = useState([]);
@@ -50,6 +52,62 @@ function App() {
       setError('Failed to add expense');
       console.error('Error adding expense:', err);
     }
+  };
+
+  // Handle browser speech transcription
+  const handleBrowserTranscription = (transcript) => {
+    // Extract amount and description from transcript
+    const amount = extractAmountFromText(transcript);
+    const category = categorizeExpense(transcript);
+    
+    if (amount) {
+      addExpense({
+        description: transcript,
+        amount: amount,
+        category: category
+      });
+    } else {
+      setError('Could not extract amount from speech. Please try speaking more clearly.');
+    }
+  };
+
+  // Helper functions for browser speech
+  const extractAmountFromText = (text) => {
+    const patterns = [
+      /\$(\d+\.?\d*)/,
+      /(\d+\.?\d*)\s*dollars?/,
+      /(\d+\.?\d*)\s*USD/,
+      /(\d+\.?\d*)/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = text.match(pattern);
+      if (match) {
+        return parseFloat(match[1]);
+      }
+    }
+    return null;
+  };
+
+  const categorizeExpense = (text) => {
+    const categories = {
+      food: ['food', 'restaurant', 'lunch', 'dinner', 'breakfast', 'coffee', 'pizza', 'burger', 'meal', 'eat', 'dining'],
+      transportation: ['gas', 'fuel', 'uber', 'taxi', 'bus', 'train', 'metro', 'parking', 'toll', 'transport'],
+      shopping: ['store', 'shop', 'mall', 'amazon', 'purchase', 'buy', 'clothes', 'shirt', 'pants', 'shoes'],
+      entertainment: ['movie', 'cinema', 'theater', 'game', 'netflix', 'spotify', 'entertainment', 'fun'],
+      utilities: ['electric', 'water', 'gas bill', 'internet', 'phone', 'utility', 'bill'],
+      healthcare: ['doctor', 'hospital', 'medicine', 'pharmacy', 'medical', 'health', 'clinic'],
+      education: ['school', 'book', 'course', 'education', 'learning', 'tuition', 'student'],
+      travel: ['hotel', 'flight', 'vacation', 'trip', 'travel', 'airbnb', 'booking']
+    };
+
+    const textLower = text.toLowerCase();
+    for (const [category, keywords] of Object.entries(categories)) {
+      if (keywords.some(keyword => textLower.includes(keyword))) {
+        return category;
+      }
+    }
+    return 'other';
   };
 
   // Delete expense
@@ -112,6 +170,16 @@ function App() {
       {/* Voice Recorder */}
       <div className="card">
         <VoiceRecorder onExpenseAdded={addExpense} />
+      </div>
+
+      {/* Browser Speech Recognition (Free) */}
+      <div className="card">
+        <BrowserSpeechRecorder onTranscription={handleBrowserTranscription} />
+      </div>
+
+      {/* Manual Expense Form */}
+      <div className="card">
+        <ManualExpenseForm onExpenseAdded={addExpense} />
       </div>
 
       {/* Stats Dashboard */}
